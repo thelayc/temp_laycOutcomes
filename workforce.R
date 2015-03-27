@@ -3,6 +3,7 @@ library(dplyr)
 library(stringr)
 library(laycUtils)
 library(laycEnrollment)
+library(gmodels)
 
 # Load data-------
 list.files('../temp_data/fy14', full.names = TRUE) 
@@ -38,25 +39,122 @@ pos <- clean_data(pos)
 # OPTIONAL: choose specific programs --------------------------------------
 ss_workforce <- str_detect(enroll$program_name, '^ss -')
 ss_workforce <- unique(enroll$program_name[ss_workforce])
-ss_workforce <- ss_workforce[!ss_workforce %in% c("ss - summer internship", "ss - case management",
-                                                  "ss - counseling", "ss - college 101 (disabled)",
-                                                  "ss - full circle brotherhood")]
+ss_workforce <- ss_workforce[!ss_workforce %in% c("ss - college 101 (disabled)", "ss - full circle brotherhood")]
 
 pos %>% filter(program_name %in% ss_workforce) -> pos
 
 # Get active workforce participants ---------------------------------------
 
-start <- '01/01/2008'
-end <- '09/30/2014'
+start <- '07/01/2012'
+end <- '06/30/2014'
 enroll <- clean_enroll(enroll, ptype, 
                        start_date = start,
                        end_date = end)
-
+# Overall
 enroll %>%
   filter(program_name %in% ss_workforce) %>%
   select(subject_id) %>%
   distinct %>%
   count
+
+# Breakdown by program
+enroll %>%
+  filter(program_name %in% ss_workforce) %>%
+  group_by(program_name) %>%
+  summarise(n = length(unique(subject_id))) ->
+  temp
+
+sum(temp$n)
+
+# get case management youth with service activity
+pos %>%
+  filter(program_name == "ss - case management") %>%
+  select(subject_id) %>%
+  distinct %>%
+  count
+  
+
+# Get dual enrollments ---------------------------------------------
+# enroll %>%
+#   filter(program_name %in% ss_workforce) %>%
+#   select(subject_id, program_name) %>%
+#   distinct ->
+#   dual_enroll
+# 
+# test <- as.data.frame(table(dual_enroll$subject_id, dual_enroll$program_name))
+# CrossTable(dual_enroll$program_name, dual_enroll$program_name,
+#            prop.t = TRUE, prop.chisq = FALSE)
+
+# Case management
+enroll %>%
+  filter(program_name == "ss - case management") %>%
+  select(subject_id) %>%
+  distinct ->
+  cm
+
+# Summer internship
+enroll %>%
+  filter(program_name == "ss - summer internship") %>%
+  select(subject_id) %>%
+  distinct ->
+  summer
+
+# ged
+enroll %>%
+  filter(program_name == "ss - ged") %>%
+  select(subject_id) %>%
+  distinct ->
+  ged
+
+# Job placement
+enroll %>%
+  filter(program_name == "ss - job placement") %>%
+  select(subject_id) %>%
+  distinct ->
+  job
+
+# counseling
+enroll %>%
+  filter(program_name == "ss - counseling") %>%
+  select(subject_id) %>%
+  distinct ->
+  counseling
+
+# JRT
+enroll %>%
+  filter(program_name == "ss - job readiness") %>%
+  select(subject_id) %>%
+  distinct ->
+  jrt
+
+# ccorps
+enroll %>%
+  filter(program_name == "ss - ccorps projects") %>%
+  select(subject_id) %>%
+  distinct ->
+  ccorps
+
+count(inner_join(cm, ged)) # cm vs ged
+count(inner_join(cm, jrt)) 
+count(inner_join(cm, job))
+count(inner_join(cm, summer))
+count(inner_join(cm, counseling))
+count(inner_join(cm, ccorps))
+count(inner_join(ccorps, counseling))
+count(inner_join(ccorps, ged))
+count(inner_join(ccorps, job))
+count(inner_join(ccorps, jrt))
+count(inner_join(ccorps, summer))
+count(inner_join(counseling, ged))
+count(inner_join(counseling, job))
+count(inner_join(counseling, jrt))
+count(inner_join(counseling, summer))
+count(inner_join(ged, job))
+count(inner_join(ged, jrt))
+count(inner_join(ged, summer))
+count(inner_join(job, jrt))
+count(inner_join(job, summer))
+count(inner_join(jrt, summer))
 
 # Get active JRT participants ---------------------------------------------
 
@@ -73,6 +171,8 @@ enroll %>%
   select(subject_id) %>%
   distinct %>%
   count
+
+# Case management
 
 # Get active GED participants --------------------------------------------
 enroll %>%
@@ -194,6 +294,18 @@ enroll %>%
 
 # Get Job placement  -----------------------------------------------
 enroll %>%
+  filter(program_name %in% ss_workforce) %>%
+  select(subject_id) %>%
+  distinct %>%
+  inner_join(job, by = 'subject_id') %>%
+  mutate(job_start = lubridate::mdy(job_start),
+         program_start = lubridate::mdy(program_start)) %>%
+  filter(program_start < job_start) %>%
+  distinct %>%
+  count
+
+# From job placement
+enroll %>%
   filter(program_name == 'ss - job placement') %>%
   select(subject_id) %>%
   distinct %>%
@@ -204,7 +316,70 @@ enroll %>%
   distinct %>%
   count
 
+# Job placement: ccorps
+enroll %>%
+  filter(program_name %in% c('ss - ccorps projects')) %>%
+  select(subject_id) %>%
+  distinct %>%
+  inner_join(job, by = 'subject_id') %>%
+  mutate(job_start = lubridate::mdy(job_start),
+         program_start = lubridate::mdy(program_start)) %>%
+  filter(program_start < job_start) %>%
+  distinct %>%
+  count
 
+# From Summer internship
+enroll %>%
+  filter(program_name %in% c('ss - summer internship')) %>%
+  select(subject_id) %>%
+  distinct %>%
+  inner_join(job, by = 'subject_id') %>%
+  mutate(job_start = lubridate::mdy(job_start),
+         program_start = lubridate::mdy(program_start)) %>%
+  filter(program_start < job_start) %>%
+  distinct %>%
+  count
 
+# Get Job retention  -----------------------------------------------
+enroll %>%
+  filter(program_name == 'ss - job placement') %>%
+  select(subject_id) %>%
+  distinct %>%
+  inner_join(job, by = 'subject_id') %>%
+  mutate(job_start = lubridate::mdy(job_start),
+         program_start = lubridate::mdy(program_start)) %>%
+  filter(program_start < job_start) %>%
+  mutate(days_employed = as.numeric(days_employed)) %>%
+  filter(days_employed > 90) %>%
+  distinct %>%
+  count
+
+# Job retention conservation corps
+enroll %>%
+  filter(program_name %in% c('ss - ccorps projects')) %>%
+  select(subject_id) %>%
+  distinct %>%
+  inner_join(job, by = 'subject_id') %>%
+  mutate(job_start = lubridate::mdy(job_start),
+         program_start = lubridate::mdy(program_start)) %>%
+  filter(program_start < job_start) %>%
+  mutate(days_employed = as.numeric(days_employed)) %>%
+  filter(days_employed > 90) %>%
+  distinct %>%
+  count
+
+# Job retention for summer internship
+enroll %>%
+  filter(program_name %in% c('ss - summer internship')) %>%
+  select(subject_id) %>%
+  distinct %>%
+  inner_join(job, by = 'subject_id') %>%
+  mutate(job_start = lubridate::mdy(job_start),
+         program_start = lubridate::mdy(program_start)) %>%
+  filter(program_start < job_start) %>%
+  mutate(days_employed = as.numeric(days_employed)) %>%
+  filter(days_employed > 90) %>%
+  distinct %>%
+  count
 
 
