@@ -3,7 +3,7 @@ library(dplyr)
 library(stringr)
 library(laycUtils)
 library(laycEnrollment)
-library(gmodels)
+#library(gmodels)
 
 # Load data-------
 list.files('../temp_data/fy14', full.names = TRUE, recursive = TRUE) 
@@ -21,22 +21,22 @@ job_path <- ("../temp_data/fy14/raw_job_report.txt")
 ptype_path <- ('../temp_data/fy14/program_type.txt')
 
 enroll <- load_txt(enroll_path)
-enroll <- laycUtils::clean_data(enroll)
+enroll <- laycUtils::format_data(enroll)
 
 ptype <- load_txt(ptype_path)
-ptype <- laycUtils::clean_data(ptype)
+ptype <- laycUtils::format_data(ptype)
 
 tp <- load_txt(tp_path)
-tp <- laycUtils::clean_data(tp)
+tp <- laycUtils::format_data(tp)
 tp_col <- colnames(tp)
 # tp_col[1] <- 'subject_id'
 # colnames(tp) <- tp_col
 
 job <- load_txt(job_path)
-job <- laycUtils::clean_data(job)
+job <- laycUtils::format_data(job)
 
 pos <- load_txt(pos_path)
-pos <- clean_data(pos)
+pos <- format_data(pos)
 
 #ppm <- load_txt("./input/ppm_tp.txt")
 
