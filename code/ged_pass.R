@@ -11,13 +11,12 @@
 #' 
 #' ged_pass(enroll_data = enroll)
 
-ged_pass <- function(enroll_data, eto_programs = c("ss - ged", 
-                                                   "pg - employment ged", 
-                                                   "dc - wise ged") {
-  enroll %>%
-  filter(program_name == 'ss - ged') %>%
-  filter(successfully_completed == 'yes') %>%
-  select(subject_id) %>%
-  distinct %>%
-  count
-}
+ged_pass <- function(enroll_data, eto_programs = c("ss - ged", "pg - employment ged", "dc - wise ged"))
+  {
+  # Retrieve only records of participants who successfully completed GED
+  df <- enroll_data[enroll_data$program_name %in% eto_programs, ]
+  df <- df[df$successfully_completed == 'yes', ]
+  # Return unduplicated count of participants with GED
+  out <- length(unique(df$subject_id))
+  return(out)
+  }
