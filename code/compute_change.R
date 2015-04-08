@@ -2,6 +2,7 @@
 #'
 #' This is a helper function that computes change in score between pre and post test. The data must be pre-processed by the followng functions: sum_weights() and id_prepost()
 #' @param df dataframe: a dataframe returned by id_prepost()
+#' @param col character vector: name of columns to keep to compute change in scores. There should be 3 columns: A column containing participant ids, a column specifying whether this is a pre / post record, a column containing the total score. 
 #' @return dataframe
 #' @export
 #' @import dplyr
@@ -14,11 +15,11 @@
 #' 
 #' compute_change(df = tp)
 
-compute_change <- function(df) {
+compute_change <- function(df, col = c('subject_id', 'prepost', 'score')) {
   
   ## Compute change: post-score minus pre-score
   # Select only relevant columns
-  out <- df[ , c('subject_id', 'prepost', 'score')]
+  out <- df[ , col]
   # Remove duplicates
   out <- unique(out)
   # Remove NAs
