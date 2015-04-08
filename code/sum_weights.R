@@ -40,28 +40,11 @@ sum_weights <- function(tp_data,
     distinct ->
     to_sum
   
-  
+  # Merge scores with original dataset
+  tp_data %>%
+    left_join(to_sum, by = group_var) ->
+    tp_data
     
-  
-  
   # Return dataframe
   return(tp_data)
 }
-
-# Convert character vector to list of symbols
-dots <- lapply(grp_cols, as.symbol)
-
-# Perform frequency counts
-df %>%
-  group_by_(.dots=dots) %>%
-  summarise(n = n())
-
-
-tp_data <- jrt_tp
-  
-jrt_tp %>%
-  
-  mutate(answer_weight = as.numeric(answer_weight)) %>%
-  group_by(subject_id, answer_id) %>%
-  mutate(score = sum(answer_weight, na.rm = TRUE)) %>%
-  ungroup() %>%

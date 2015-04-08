@@ -18,7 +18,8 @@ id_prepost <- function(tp_data){
   tp_data %>%
     dplyr::group_by_(~subject_id) %>%
     mutate_(first = ~min(date),
-            last = ~max(date)) ->
+            last = ~max(date)) %>%
+    ungroup() ->
     tp_data
   
   # Assign pre / post values to first / last date taken 
@@ -27,7 +28,7 @@ id_prepost <- function(tp_data){
   tp_data$prepost[tp_data$date == tp_data$last] <- 'post'
   
   # Return dataframe
-  return(tp_data)
+  return(as.data.frame(tp_data))
 }
 
 
